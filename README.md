@@ -5,7 +5,7 @@ Project Repo for 2110582 AI Apps by 6730084521 Chatrphol and 6733092021 Thanabod
 
 **Live site: https://flowledger-fridge-demo.fly.dev**
 
-A class project for **AI and LS**, by Chatrphol (6730084521) and Thanabodee (6733092021).
+A class project for **AI and LS**, by Chatrphol (6730084521) and Thanabodhi (6733092021).
 
 FlowLedger is the back office of a fridge distributor. It walks a customer's order
 from the invoice to a paid invoice in the customer's inbox. AI reads, checks and
