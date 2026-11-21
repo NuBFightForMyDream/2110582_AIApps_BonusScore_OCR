@@ -1,0 +1,275 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1170" viewBox="0 0 1440 1170" role="img" aria-labelledby="dg-title dg-desc">
+  <title id="dg-title">FlowLedger: purchase order to paid invoice in 13 steps</title>
+  <desc id="dg-desc">Paper invoices and e-invoices are stored in S3 and Postgres, read by a local OCR model and checked by Claude Haiku 5.5, then checked against fridge stock. Agent 1 validates the order, an invoice is created and the delivery team is notified. After delivery, the customer signs, the delivery team photographs the proof of delivery and staff accept payment. Agent 2 checks the photo and the payment, using OCR on the payment slip and the Bank API. Stock and the database are then updated and shown on a custom dashboard.</desc>
+
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#f1f1f1" stroke-width="1"/>
+    </pattern>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M1,1 L9,5 L1,9" fill="none" stroke="#1f1f1f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <filter id="sh" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="1.2" flood-color="#000" flood-opacity=".16"/>
+    </filter>
+    <style>
+      text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif; fill: #1f1f1f; }
+      .title { font-size: 38px; font-weight: 700; letter-spacing: -0.5px; }
+      .sub { font-size: 19px; }
+      .lbl { font-size: 12px; font-weight: 700; }
+      .pill { font-size: 13px; text-anchor: middle; }
+      .ch { font-size: 14px; font-weight: 700; text-anchor: middle; }
+      .cb { font-size: 13px; text-anchor: middle; }
+      .h { font-size: 15px; font-weight: 700; text-anchor: middle; }
+      .n { font-size: 14px; text-anchor: middle; }
+      .s { font-size: 12.5px; text-anchor: middle; }
+      .m { font-size: 12px; text-anchor: middle; fill: #4b4b4b; }
+      .e { font-size: 12px; text-anchor: middle; fill: #333; }
+      .g { font-size: 13px; }
+      .gh { font-size: 14px; font-weight: 700; }
+      .badge text { font-size: 11.5px; font-weight: 700; text-anchor: middle; fill: #fff; }
+      .line { fill: none; stroke: #1f1f1f; stroke-width: 1.4; }
+      .dash { stroke-dasharray: 5 4; }
+      .factory { fill: #efa45c; stroke: #d98b3f; }
+      .office { fill: #7db6f5; stroke: #5a9be6; }
+      .agent { fill: #a99bf0; stroke: #8b7be3; }
+      .model { fill: #ddd6fb; stroke: #a99bf0; }
+      .sys { fill: #dadada; stroke: #c2c2c2; }
+      .sys-top { fill: #bdbdbd; stroke: #b0b0b0; }
+      .card { fill: #d9d9d9; stroke: #c9c9c9; }
+      .extra { fill: #f4f4f4; stroke: #a8a8a8; stroke-dasharray: 5 4; }
+    </style>
+  </defs>
+
+  <!-- background -->
+  <rect width="1440" height="1170" fill="#ffffff"/>
+  <rect width="1440" height="1170" fill="url(#grid)"/>
+
+  <!-- header -->
+  <text x="58" y="88" class="title">Purchase Order → Paid Invoice</text>
+  <text x="58" y="126" class="sub">13 steps · local OCR digitizes, Claude checks, 2 AI agents validate and sign off.</text>
+
+  <!-- legend -->
+  <text x="742" y="38" class="lbl">Who owns each step</text>
+  <rect x="742" y="50" width="146" height="30" rx="15" class="factory"/>
+  <text x="815" y="70" class="pill">Factory / Delivery</text>
+  <rect x="898" y="50" width="112" height="30" rx="15" class="office"/>
+  <text x="954" y="70" class="pill">Office (HQ)</text>
+  <rect x="1020" y="50" width="96" height="30" rx="15" class="agent"/>
+  <text x="1068" y="70" class="pill">AI agent</text>
+  <rect x="1126" y="50" width="96" height="30" rx="15" class="model"/>
+  <text x="1174" y="70" class="pill">AI model</text>
+  <rect x="1232" y="50" width="150" height="30" rx="15" class="sys"/>
+  <text x="1307" y="70" class="pill">System / automation</text>
+
+  <!-- summary cards -->
+  <g filter="url(#sh)">
+    <rect x="58" y="160" width="248" height="66" rx="8" class="card"/>
+    <rect x="326" y="160" width="248" height="66" rx="8" class="card"/>
+    <rect x="594" y="160" width="248" height="66" rx="8" class="card"/>
+    <rect x="862" y="160" width="248" height="66" rx="8" class="card"/>
+    <rect x="1130" y="160" width="248" height="66" rx="8" class="card"/>
+  </g>
+  <text x="182" y="187" class="ch">2 AI agents</text>
+  <text x="182" y="207" class="cb">#1 validate order · #2 sign-off</text>
+  <text x="450" y="187" class="ch">AI models</text>
+  <text x="450" y="207" class="cb">Claude Haiku 5.5 · Fable 5.2 · OCR</text>
+  <text x="718" y="187" class="ch">Cloud (AWS)</text>
+  <text x="718" y="207" class="cb">S3 · PostgreSQL · Athena</text>
+  <text x="986" y="187" class="ch">Alerts + dashboards</text>
+  <text x="986" y="207" class="cb">Amazon SNS · QuickSight · web app</text>
+  <text x="1254" y="187" class="ch">Payments</text>
+  <text x="1254" y="207" class="cb">Bank API (K API) confirms transfer</text>
+
+  <!-- ===================== connectors ===================== -->
+  <!-- 1 -> 2 -->
+  <path d="M214,348 H232 V384 H250" class="line" marker-end="url(#ah)"/>
+  <path d="M214,440 H232 V398 H250" class="line" marker-end="url(#ah)"/>
+  <!-- 2 -> 3 -->
+  <path d="M400,391 H468" class="line" marker-end="url(#ah)"/>
+  <text x="434" y="383" class="e">local OCR</text>
+  <!-- 3 -> staff review -->
+  <path d="M560,432 V486" class="line dash" marker-end="url(#ah)"/>
+  <!-- 3 -> 4 -->
+  <path d="M650,391 H686" class="line" marker-end="url(#ah)"/>
+  <!-- 4 -> owner (not enough) -->
+  <path d="M888,391 H998" class="line" marker-end="url(#ah)"/>
+  <text x="943" y="383" class="e">not enough</text>
+  <!-- owner -> 4 (re-check) -->
+  <path d="M1090,361 V302 H788 V325" class="line dash" marker-end="url(#ah)"/>
+  <rect x="866" y="293" width="146" height="18" fill="#fff"/>
+  <text x="939" y="306" class="e">re-check after restock</text>
+  <!-- 4 -> 5 (enough) -->
+  <path d="M788,455 V558" class="line" marker-end="url(#ah)"/>
+  <rect x="762" y="497" width="52" height="18" fill="#fff"/>
+  <text x="788" y="510" class="e">enough</text>
+  <!-- 5 -> notify / create invoice -->
+  <path d="M908,616 H930 V578 H950" class="line" marker-end="url(#ah)"/>
+  <path d="M908,616 H930 V658 H950" class="line" marker-end="url(#ah)"/>
+  <!-- notify / create -> deliver -->
+  <path d="M1122,578 H1146 V606 H1168" class="line" marker-end="url(#ah)"/>
+  <path d="M1122,658 H1146 V630 H1168" class="line" marker-end="url(#ah)"/>
+  <!-- 7 -> 8a (photo) -->
+  <path d="M1255,660 V764" class="line" marker-end="url(#ah)"/>
+  <!-- 7 -> 8b (payment) -->
+  <path d="M1340,618 H1380 V910 H1342" class="line" marker-end="url(#ah)"/>
+  <!-- 8a -> 9 -->
+  <path d="M1170,803 H892" class="line" marker-end="url(#ah)"/>
+  <!-- 8b -> 10 -->
+  <path d="M1170,910 H1122" class="line" marker-end="url(#ah)"/>
+  <!-- 10 -> 9 -->
+  <path d="M950,910 H920 V860 H892" class="line" marker-end="url(#ah)"/>
+  <!-- 9 <-> 11 -->
+  <path d="M765,886 V935" class="line" marker-start="url(#ah)" marker-end="url(#ah)"/>
+  <!-- 9 -> 12 -->
+  <path d="M640,825 H592" class="line" marker-end="url(#ah)"/>
+  <!-- 12 -> 13 -->
+  <path d="M380,825 H300" class="line" marker-end="url(#ah)"/>
+  <!-- 12 -> gmail (extra) -->
+  <path d="M485,872 V912" class="line dash" marker-end="url(#ah)"/>
+
+  <!-- ===================== nodes ===================== -->
+  <g filter="url(#sh)">
+    <!-- 1: paper invoice + e-invoice -->
+    <path d="M58,318 H214 V370 Q175,358 136,370 T58,370 Z" class="sys"/>
+    <path d="M58,410 H214 V462 Q175,450 136,462 T58,462 Z" class="sys"/>
+    <!-- 2: cloud storage -->
+    <path d="M252,346 V436 A74,11 0 0 0 400,436 V346 Z" class="sys"/>
+    <ellipse cx="326" cy="346" rx="74" ry="11" class="sys-top"/>
+    <!-- 3: validate OCR -->
+    <rect x="470" y="350" width="180" height="82" rx="8" class="model"/>
+    <!-- 3b: staff review -->
+    <rect x="470" y="488" width="180" height="54" rx="8" class="office"/>
+    <!-- 4: stock check -->
+    <polygon points="788,327 888,391 788,455 688,391" class="sys"/>
+    <!-- owner notified -->
+    <rect x="1000" y="361" width="180" height="60" rx="8" class="factory"/>
+    <!-- 5: agent #1 -->
+    <rect x="668" y="560" width="240" height="112" rx="8" class="agent"/>
+    <!-- notify delivery -->
+    <rect x="952" y="550" width="170" height="56" rx="8" class="factory"/>
+    <!-- 6: create invoice -->
+    <rect x="952" y="630" width="170" height="56" rx="8" class="sys"/>
+    <!-- 7: deliver -->
+    <rect x="1170" y="576" width="170" height="84" rx="8" class="factory"/>
+    <!-- 8a: photo -->
+    <rect x="1170" y="766" width="170" height="74" rx="8" class="factory"/>
+    <!-- 8b: payment -->
+    <rect x="1170" y="874" width="170" height="72" rx="8" class="office"/>
+    <!-- 10: slip OCR -->
+    <rect x="950" y="874" width="170" height="72" rx="8" class="model"/>
+    <!-- 9: agent #2 -->
+    <rect x="640" y="766" width="250" height="118" rx="8" class="agent"/>
+    <!-- 11: bank api -->
+    <path d="M685,948 V1018 A80,11 0 0 0 845,1018 V948 Z" class="sys"/>
+    <ellipse cx="765" cy="948" rx="80" ry="11" class="sys-top"/>
+    <!-- 12: update stock -->
+    <rect x="380" y="778" width="210" height="94" rx="8" class="sys"/>
+    <!-- 13: dashboard -->
+    <rect x="58" y="778" width="240" height="94" rx="8" class="sys"/>
+  </g>
+  <!-- extra: gmail (no shadow, dashed) -->
+  <rect x="380" y="914" width="210" height="52" rx="8" class="extra"/>
+
+  <!-- ===================== node text ===================== -->
+  <text x="136" y="341" class="n">Invoice (paper)</text>
+  <text x="136" y="359" class="m">scanned by staff</text>
+  <text x="136" y="433" class="n">E-invoice</text>
+  <text x="136" y="451" class="m">fetched from system</text>
+
+  <text x="326" y="390" class="n">Cloud storage</text>
+  <text x="326" y="409" class="s">S3 + PostgreSQL</text>
+
+  <text x="560" y="378" class="h">Validate OCR</text>
+  <text x="560" y="398" class="n">Claude Haiku 5.5</text>
+  <text x="560" y="417" class="m">non-agentic check</text>
+
+  <text x="560" y="511" class="n">Staff reviews</text>
+  <text x="560" y="529" class="s">flagged fields (Tax ID)</text>
+
+  <text x="788" y="387" class="h">Enough stock?</text>
+  <text x="788" y="406" class="s">Athena · fridge DB</text>
+
+  <text x="1090" y="386" class="n">Owner notified</text>
+  <text x="1090" y="405" class="s">buy / build more</text>
+
+  <text x="788" y="589" class="h">Agent #1 · Validate order</text>
+  <text x="788" y="609" class="n">Claude Fable 5.2</text>
+  <text x="788" y="629" class="s">credit · prices · reserve stock</text>
+  <text x="788" y="649" class="m">reports to QuickSight</text>
+
+  <text x="1037" y="574" class="n">Notify delivery team</text>
+  <text x="1037" y="593" class="m">Amazon SNS</text>
+
+  <text x="1037" y="654" class="n">Create invoice</text>
+  <text x="1037" y="673" class="m">e-Tax + paper copy</text>
+
+  <text x="1255" y="612" class="n">Deliver to customer</text>
+  <text x="1255" y="632" class="s">customer accepts + signs</text>
+
+  <text x="1255" y="795" class="n">Delivery team</text>
+  <text x="1255" y="814" class="s">photographs POD</text>
+  <text x="1255" y="831" class="m">web app</text>
+
+  <text x="1255" y="903" class="n">Staff accepts payment</text>
+  <text x="1255" y="922" class="s">sends bill to Agent #2</text>
+
+  <text x="1035" y="903" class="n">OCR bill / cash slip</text>
+  <text x="1035" y="922" class="s">local OCR model</text>
+
+  <text x="765" y="796" class="h">Agent #2 · Sign off</text>
+  <text x="765" y="816" class="n">Claude Haiku 5.5</text>
+  <text x="765" y="836" class="s">checks POD photo</text>
+  <text x="765" y="854" class="s">+ payment vs. invoice</text>
+
+  <text x="765" y="983" class="n">Bank API</text>
+  <text x="765" y="1002" class="s">K API · checks invoice</text>
+
+  <text x="485" y="806" class="h">Update stock + DB</text>
+  <text x="485" y="826" class="s">automate + cross-check</text>
+  <text x="485" y="844" class="s">stock out · marked paid</text>
+  <text x="485" y="862" class="m">loops back to step 4</text>
+
+  <text x="178" y="806" class="h">Custom dashboard</text>
+  <text x="178" y="826" class="s">web app on AWS S3</text>
+  <text x="178" y="844" class="s">for riders, staff, owner</text>
+
+  <text x="485" y="936" class="n">Extra: Gmail receipt</text>
+  <text x="485" y="954" class="m">paid invoice → customer</text>
+
+  <!-- ===================== step badges ===================== -->
+  <g class="badge">
+    <circle cx="58" cy="318" r="12" fill="#1f2937" stroke="#fff" stroke-width="2"/><text x="58" y="322">1</text>
+    <circle cx="58" cy="410" r="12" fill="#1f2937" stroke="#fff" stroke-width="2"/><text x="58" y="414">1</text>
+    <circle cx="252" cy="346" r="12" fill="#1f2937" stroke="#fff" stroke-width="2"/><text x="252" y="350">2</text>
+    <circle cx="470" cy="350" r="12" fill="#1f2937" stroke="#fff" stroke-width="2"/><text x="470" y="354">3</text>
+    <circle cx="735" cy="361" r="12" fill="#1f2937" stroke="#fff" stroke-width="2"/><text x="735" y="365">4</text>
+    <circle cx="668" cy="560" r="12" fill="#1f2937" stroke="#fff" stroke-width="2"/><text x="668" y="564">5</text>
+    <circle cx="952" cy="630" r="12" fill="#1f2937" stroke="#fff" stroke-width="2"/><text x="952" y="634">6</text>
+    <circle cx="1170" cy="576" r="12" fill="#1f2937" stroke="#fff" stroke-width="2"/><text x="1170" y="580">7</text>
+    <circle cx="1170" cy="766" r="12" fill="#1f2937" stroke="#fff" stroke-width="2"/><text x="1170" y="770">8</text>
+    <circle cx="1170" cy="874" r="12" fill="#1f2937" stroke="#fff" stroke-width="2"/><text x="1170" y="878">8</text>
+    <circle cx="640" cy="766" r="12" fill="#1f2937" stroke="#fff" stroke-width="2"/><text x="640" y="770">9</text>
+    <circle cx="950" cy="874" r="12" fill="#1f2937" stroke="#fff" stroke-width="2"/><text x="950" y="878">10</text>
+    <circle cx="685" cy="948" r="12" fill="#1f2937" stroke="#fff" stroke-width="2"/><text x="685" y="952">11</text>
+    <circle cx="380" cy="778" r="12" fill="#1f2937" stroke="#fff" stroke-width="2"/><text x="380" y="782">12</text>
+    <circle cx="58" cy="778" r="12" fill="#1f2937" stroke="#fff" stroke-width="2"/><text x="58" y="782">13</text>
+  </g>
+
+  <!-- ===================== guardrails ===================== -->
+  <text x="58" y="1010" class="gh">Guardrails</text>
+  <text x="58" y="1034" class="g">•  AI reads and proposes; a person approves anything with money (restock, payment)</text>
+  <text x="58" y="1056" class="g">•  Low OCR confidence or a bad Tax ID → staff review queue</text>
+  <text x="58" y="1078" class="g">•  Agent #1 reserves stock at step 5; stock is deducted only at step 12</text>
+  <text x="58" y="1100" class="g">•  Marked PAID only after the Bank API confirms the transfer (step 11)</text>
+  <text x="58" y="1122" class="g">•  Each step runs only from the right status, so no step can be skipped</text>
+  <text x="58" y="1144" class="g">•  Every step is logged with time and actor (activity log + invoice timeline)</text>
+
+  <!-- ===================== demo note ===================== -->
+  <rect x="900" y="990" width="482" height="140" rx="10" fill="#fafafa" stroke="#c9c9c9" stroke-dasharray="5 4"/>
+  <text x="922" y="1018" class="gh">In this repo (demo)</text>
+  <text x="922" y="1043" class="g">All steps run in the browser and every service is mocked:</text>
+  <text x="922" y="1063" class="g">S3, Postgres, OCR, LLM, agents, Bank API and Gmail.</text>
+  <text x="922" y="1089" class="g">Code: lib/actions.ts (one function per step)</text>
+  <text x="922" y="1111" class="g">Try it: flowledger-fridge-demo.fly.dev → Guided demo</text>
+</svg>
