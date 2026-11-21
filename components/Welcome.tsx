@@ -1,28 +1,28 @@
 "use client";
 
-import { fetchEInvoices, scanPaper } from "@/lib/actions";
+import { scanPaper } from "@/lib/actions";
 import { ACTOR_LABEL, STAGES } from "@/lib/data";
 import { startGuide } from "@/lib/guide";
+import { ROLES } from "@/lib/roles";
 import { useStore } from "@/lib/store";
 
+/** First-run screen inside the back office. */
 export default function Welcome() {
   const s = useStore();
   return (
     <div className="welcome">
       <h1>Follow a fridge order from invoice to payment.</h1>
       <p className="lede">
-        A retailer orders nine side-by-side fridges on paper. Watch AI read the invoice, check stock and match the
-        payment, and step in yourself where a person has to decide.
+        A retailer orders nine side-by-side fridges on paper. The order passes through five people&apos;s screens:{" "}
+        {ROLES.map((r) => r.name.toLowerCase()).join(", ").replace(/, ([^,]*)$/, " and $1")}. AI does the reading,
+        checking and matching. People step in where a decision is needed.
       </p>
       <div className="row">
         <button className="btn btn-primary btn-lg" onClick={startGuide} disabled={!!s.guide}>
           Start guided demo
         </button>
-        <button className="btn btn-ghost" onClick={() => scanPaper()}>
+        <button className="btn btn-ghost btn-lg" onClick={() => scanPaper()}>
           Scan a sample invoice
-        </button>
-        <button className="btn btn-ghost" onClick={fetchEInvoices}>
-          Fetch e-invoices
         </button>
       </div>
 

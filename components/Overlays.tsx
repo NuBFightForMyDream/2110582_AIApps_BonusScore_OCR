@@ -1,66 +1,11 @@
 "use client";
 
-import { compose, sendEmail } from "@/lib/actions";
+import { canTravel, openAs, setRole, undo } from "@/lib/actions";
 import { STAGES } from "@/lib/data";
-import { draftEmail } from "@/lib/format";
 import { exitGuide, GUIDE_TOTAL, guideOrder, guideStep, runGuideStep } from "@/lib/guide";
-import { useStore } from "@/lib/store";
-import type { Order } from "@/lib/types";
-import { useEffect, useState } from "react";
-
-function Compose({ o }: { o: Order }) {
-  const s = useStore();
-  const [d, setD] = useState(() => draftEmail(o));
-  const sending = s.busy[o.id] === "send";
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && !sending && compose(null);
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [sending]);
-
-  return (
-    <div className="overlay" onClick={(e) => e.target === e.currentTarget && !sending && compose(null)}>
-      <div className="modal" role="dialog" aria-modal="true" aria-labelledby="compose-title">
-        <div className="modal-h">
-          <h2 id="compose-title">New email in Gmail</h2>
-          <span className="mock-chip">Not really sent</span>
-        </div>
-        <div className="modal-b">
-          <label className="mrow">
-            <span>To</span>
-            <input value={d.to} onChange={(e) => setD({ ...d, to: e.target.value })} />
-          </label>
-          <label className="mrow">
-            <span>Subject</span>
-            <input value={d.subject} onChange={(e) => setD({ ...d, subject: e.target.value })} />
-          </label>
-          <textarea rows={8} value={d.body} onChange={(e) => setD({ ...d, body: e.target.value })} aria-label="Message" />
-          <span className="attach">
-            <span className="attach-ic" aria-hidden>
-              PDF
-            </span>
-            {o.id}.pdf, 84 KB
-          </span>
-        </div>
-        <div className="modal-f">
-          <button className="btn btn-ghost" onClick={() => compose(null)} disabled={sending}>
-            Cancel
-          </button>
-          <button className="btn btn-mail" onClick={() => sendEmail(o.id, d)} disabled={sending || !d.to.trim()}>
-            {sending ? "Sending…" : "Send email"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export function GmailModal() {
-  const s = useStore();
-  const o = s.composeFor ? s.orders.find((x) => x.id === s.composeFor) : undefined;
-  return o ? <Compose key={o.id} o={o} /> : null;
-}
+import { roleName } from "@/lib/roles";
+import { getState, useStore } from "@/lib/store";
+import { useEffect } from "react";
 
 export function Toasts() {
   const s = useStore();
@@ -76,40 +21,78 @@ export function Toasts() {
   );
 }
 
-/** Step-by-step guide. Advances only when the user presses Next (or does the step themselves). */
+/** Step-by-step guide. Human steps wait for Next; automatic steps are narrated while they run. */
 export function GuideBar() {
   const s = useStore();
-  if (!s.guide) return null;
+  // On the Driver screen the guide sits beside the phone instead (see DriverScreen).
+  return s.guide && s.role !== "driver" ? <Guide /> : null;
+}
+
+/** The guide panel. `inline` places it in the page flow instead of fixed at the bottom. */
+export function Guide({ inline = false }: { inline?: boolean }) {
+  const s = useStore();
   const step = guideStep(s);
   const o = guideOrder(s);
-  const working = !!(o && s.busy[o.id]);
+  const settled = canTravel();
   const stage = STAGES[step.stage - 1];
+  const here = s.role === step.role;
+
+  // Each time the guide moves to a new step, show the screen where it happens.
+  // Remembered on the guide itself, so remounting (e.g. switching tabs) doesn't pull you back.
+  useEffect(() => {
+    const g = getState().guide;
+    const key = `${step.n}:${step.role}`;
+    if (!g || g.shown === key) return;
+    g.shown = key;
+    if (o) openAs(step.role, o.id);
+    else setRole(step.role);
+  }, [step.n, step.role]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <section className={`guide guide-${step.actor}`} aria-label="Guided demo" aria-live="polite">
+    <section className={`guide guide-${step.actor} ${inline ? "guide-inline" : ""}`} aria-label="Guided demo" aria-live="polite">
       <div className="guide-progress" aria-hidden>
         <i style={{ width: `${(step.n / GUIDE_TOTAL) * 100}%` }} />
       </div>
       <div className="guide-body">
         <div className="guide-text">
           <div className="guide-meta">
-            Step {step.n} of {GUIDE_TOTAL}, in stage {stage.n}: {stage.name}
+            Step {step.n} of {GUIDE_TOTAL}. Stage {stage.n}, {stage.name.toLowerCase()}, on the{" "}
+            {here ? (
+              <b>{roleName(step.role)}</b>
+            ) : (
+              <button className="link" onClick={() => setRole(step.role)}>
+                {roleName(step.role)}
+              </button>
+            )}{" "}
+            screen.
           </div>
-          <h2>{step.title}</h2>
+          <h2>
+            {step.auto ? <span className="auto-tag">Automatic</span> : step.actor === "human" && <span className="needs-you">Needs you</span>}
+            {step.title}
+          </h2>
           <p>{step.text}</p>
         </div>
         <div className="guide-actions">
-          {step.next && (
-            <button className="btn btn-primary" onClick={runGuideStep} disabled={working}>
-              {working ? "Working…" : step.next}
-            </button>
-          )}
-          {step.actor !== "done" && (
-            <button className="btn btn-ghost" onClick={exitGuide}>
-              Exit guide
-            </button>
+          <button className="btn btn-ghost" onClick={undo} disabled={!settled || s.past.length === 0}>
+            Back
+          </button>
+          {step.auto ? (
+            <span className="guide-running">
+              <span className="spinner sm" aria-hidden /> Running
+            </span>
+          ) : (
+            step.next && (
+              <button className="btn btn-primary" onClick={runGuideStep} disabled={!settled}>
+                {settled ? step.next : "Working…"}
+              </button>
+            )
           )}
         </div>
+        {step.actor !== "done" && (
+          <button className="guide-exit" onClick={exitGuide} aria-label="Exit guide">
+            ×
+          </button>
+        )}
       </div>
     </section>
   );

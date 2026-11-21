@@ -1,18 +1,20 @@
 "use client";
 
-import { reset } from "@/lib/actions";
+import { isAuto, redo, reset, setRole, undo } from "@/lib/actions";
 import { NEXT } from "@/lib/data";
-import { baht, totals } from "@/lib/format";
 import { startGuide } from "@/lib/guide";
+import { ROLE_OF, ROLES, type Role } from "@/lib/roles";
 import { useStore } from "@/lib/store";
 
 export default function TopBar() {
   const s = useStore();
-  const done = s.orders.filter((o) => o.status === "emailed");
-  const waiting = s.orders.filter((o) => NEXT[o.status]?.actor === "human").length;
-  const open = s.orders.length - done.length;
-  const collected = done.reduce((a, o) => a + totals(o).total, 0);
-  const busy = Object.keys(s.busy).length > 0;
+  const busy = Object.keys(s.busy).length > 0 || Object.keys(s.running).length > 0;
+
+  /** Orders waiting for a person on each screen (unread mail for the inbox). */
+  const waiting = (r: Role) =>
+    r === "inbox"
+      ? s.orders.filter((o) => o.mail && !o.mailRead).length
+      : s.orders.filter((o) => NEXT[o.status] && !isAuto(o) && ROLE_OF[o.status] === r).length;
 
   return (
     <header className="topbar">
@@ -27,35 +29,46 @@ export default function TopBar() {
         </div>
       </div>
 
-      <p className="summary" aria-live="polite">
-        {s.orders.length === 0 ? (
-          "No invoices yet"
-        ) : (
-          <>
-            <span>
-              <b>{open}</b> open
-            </span>
-            <span className={waiting ? "summary-human" : ""}>
-              <b>{waiting}</b> waiting on you
-            </span>
-            <span>
-              <b>{done.length}</b> paid
-            </span>
-            <span>
-              <b className="mono">{baht(collected).replace(".00", "")}</b> collected
-            </span>
-          </>
-        )}
-      </p>
+      <nav className="roles" aria-label="Screens">
+        {ROLES.map((r) => {
+          const n = waiting(r.id);
+          return (
+            <button
+              key={r.id}
+              className={s.role === r.id ? "on" : ""}
+              aria-current={s.role === r.id ? "page" : undefined}
+              onClick={() => setRole(r.id)}
+            >
+              {r.name}
+              {n > 0 && <span className="role-n">{n}</span>}
+            </button>
+          );
+        })}
+      </nav>
 
       <div className="top-actions">
-        <span className="mock-chip" title="No AWS, bank or Gmail services are connected. All data is made up.">
-          Mock data
-        </span>
+        <div className="undo-redo" role="group" aria-label="Undo and redo">
+          <button
+            className="btn btn-ghost"
+            onClick={undo}
+            disabled={busy || s.past.length === 0}
+            title={s.past.length ? `Undo: ${s.past.at(-1)!.label} (Ctrl+Z)` : "Nothing to undo"}
+          >
+            Undo
+          </button>
+          <button
+            className="btn btn-ghost"
+            onClick={redo}
+            disabled={busy || s.future.length === 0}
+            title={s.future.length ? `Redo: ${s.future.at(-1)!.label} (Ctrl+Shift+Z)` : "Nothing to redo"}
+          >
+            Redo
+          </button>
+        </div>
         <button className="btn btn-primary" onClick={startGuide} disabled={!!s.guide}>
           Guided demo
         </button>
-        <button className="btn btn-ghost" onClick={reset} disabled={busy}>
+        <button className="btn btn-ghost" onClick={reset} disabled={busy} title="Start over with no invoices">
           Reset
         </button>
       </div>

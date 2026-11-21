@@ -11,6 +11,7 @@ export type Status =
   | "saved" // stage 3: validated + saved via API
   | "short" // stage 4: stock short, waiting for human restock decision
   | "ready" // stage 4: stock OK
+  | "decided" // stage 5: agent recommends approval, waiting for a person to confirm
   | "released" // stage 5: agent approved
   | "invoiced" // stage 6: invoice created, delivery notified
   | "out" // stage 6: out for delivery
@@ -69,6 +70,7 @@ export interface Order {
   channel: Channel;
   customer: string;
   email: string;
+  address: string;
   taxId: string; // the true value printed on the document
   ocrTaxId: string; // what the OCR read (may contain a misread)
   taxIdFinal?: string; // value after human review
@@ -90,6 +92,8 @@ export interface Order {
   bankRef?: string;
   stockDiff?: { sku: Sku; before: number; after: number }[];
   mail?: { to: string; subject: string; body: string; time: string; id: string };
+  /** The customer has opened the emailed invoice. */
+  mailRead?: boolean;
   timeline: TimelineEntry[];
 }
 

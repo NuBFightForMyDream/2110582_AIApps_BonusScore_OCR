@@ -1,14 +1,13 @@
 "use client";
 
 import { ACTOR_LABEL, CATALOG, STAGES, STATUS } from "@/lib/data";
-import { baht, reached, totals } from "@/lib/format";
+import { baht, reached } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import type { Order } from "@/lib/types";
-import ActionCard, { AgentTrace } from "./ActionCard";
-import DocView from "./DocView";
-import { ActorTag, Meter, Section, StatusPill } from "./ui";
+import { AgentChecks } from "./AgentReview";
+import { ActorTag, Meter, Section } from "./ui";
 
-function StageRail({ o }: { o: Order }) {
+export function StageRail({ o }: { o: Order }) {
   const cur = STATUS[o.status].stage;
   const done = o.status === "emailed";
   return (
@@ -27,10 +26,9 @@ function StageRail({ o }: { o: Order }) {
 }
 
 /** Everything the pipeline has produced for this invoice so far. */
-function Record({ o }: { o: Order }) {
+export function Record({ o }: { o: Order }) {
   const s = useStore();
   const paper = o.channel === "paper";
-  const { total } = totals(o);
   const showStock = reached(o, "short") && o.status !== "saved";
 
   return (
@@ -74,17 +72,10 @@ function Record({ o }: { o: Order }) {
       )}
 
       {reached(o, "saved") && (
-        <Section title="Saved to database" tag={<span className="tag tag-done">201 Created</span>}>
-          <pre className="code">{`POST /api/invoices
-{
-  "invoice_no": "${o.id}",
-  "customer": "${o.customer}",
-  "tax_id": "${o.taxIdFinal}",
-  "total": ${total.toFixed(2)},
-  "source": "${o.s3}",
-  "validated_by": ["${paper ? "local-ocr" : "xml-parser"}", "llm", "human-review"]
-}`}</pre>
-        </Section>
+        <p className="saved-line">
+          <span className="recon-ok">✓</span> Saved to the database. Checked by {paper ? "the local OCR model" : "the XML parser"}, the LLM
+          {o.fields?.some((f) => f.flagged) ? " and a person" : ""}.
+        </p>
       )}
 
       {(showStock || s.busy[o.id] === "stock") && (
@@ -127,8 +118,8 @@ function Record({ o }: { o: Order }) {
       )}
 
       {reached(o, "released") && o.agentTrace && (
-        <Section title="Agent decision" tag={<ActorTag actor="ai">AI agent</ActorTag>}>
-          <AgentTrace o={o} />
+        <Section title="Agent checks" tag={<ActorTag actor="ai">AI agent</ActorTag>}>
+          <AgentChecks o={o} />
         </Section>
       )}
 
@@ -200,7 +191,7 @@ function Record({ o }: { o: Order }) {
   );
 }
 
-function Timeline({ o }: { o: Order }) {
+export function Timeline({ o }: { o: Order }) {
   return (
     <Section title="Timeline">
       <ol className="timeline">
@@ -219,36 +210,17 @@ function Timeline({ o }: { o: Order }) {
   );
 }
 
-export default function OrderView({ o }: { o: Order }) {
-  const { total } = totals(o);
-  const issued = reached(o, "invoiced");
+export function AgentTrace({ o }: { o: Order }) {
   return (
-    <div className="order">
-      <header className="order-h">
-        <div>
-          <div className="order-src">
-            {o.channel === "paper" ? "Paper invoice, scanned" : "E-invoice"} <span className="mono">{o.s3}</span>
-          </div>
-          <h1>
-            {o.id} <span className="order-cust">{o.customer}</span>
-          </h1>
-        </div>
-        <div className="order-total">
-          <span className="mono">{baht(total)}</span>
-          <StatusPill status={o.status} />
-        </div>
-      </header>
-
-      <StageRail o={o} />
-      <ActionCard o={o} />
-
-      <div className="order-grid">
-        <Record o={o} />
-        <div className="order-side">
-          <DocView o={o} issued={issued} />
-          <Timeline o={o} />
-        </div>
-      </div>
-    </div>
+    <ol className="trace">
+      {o.agentTrace?.map((st, i) => (
+        <li key={i}>
+          <code>
+            {st.tool}({st.args ?? ""})
+          </code>
+          <span>→ {st.tool === "recommend" ? <b>{st.result}</b> : st.result}</span>
+        </li>
+      ))}
+    </ol>
   );
 }

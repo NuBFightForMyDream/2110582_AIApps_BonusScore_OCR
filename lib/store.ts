@@ -2,7 +2,16 @@
 
 import { useSyncExternalStore } from "react";
 import { INITIAL_BANK, INITIAL_STOCK } from "./data";
+import type { Role } from "./roles";
 import type { BankTx, BusyKind, LogEntry, Order, Sku, Toast } from "./types";
+
+/** The parts of the state that undo/redo rewinds. */
+export type Snapshot = Pick<State, "orders" | "selected" | "log" | "stock" | "bank" | "nextNo" | "paperIdx">;
+
+export interface HistoryEntry {
+  label: string;
+  snap: Snapshot;
+}
 
 export interface State {
   orders: Order[];
@@ -14,9 +23,15 @@ export interface State {
   nextNo: number;
   paperIdx: number;
   /** Step-by-step guide: which invoice it is following. null when the guide is off. */
-  guide: { orderId: string | null } | null;
-  composeFor: string | null;
+  guide: { orderId: string | null; /** Last step whose screen the guide opened. */ shown?: string } | null;
+  /** Orders whose automatic steps are running right now. */
+  running: Record<string, true>;
   toasts: Toast[];
+  /** Which role's screen is showing. Not part of undo. */
+  role: Role;
+  /** Undo stack (oldest first) and redo stack (most recent undo last). */
+  past: HistoryEntry[];
+  future: HistoryEntry[];
 }
 
 export function initialState(): State {
@@ -30,8 +45,11 @@ export function initialState(): State {
     nextNo: 2041,
     paperIdx: 0,
     guide: null,
-    composeFor: null,
+    running: {},
     toasts: [],
+    role: "admin",
+    past: [],
+    future: [],
   };
 }
 

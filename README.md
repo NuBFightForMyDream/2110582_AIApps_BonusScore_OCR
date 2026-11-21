@@ -3,7 +3,7 @@
 **Paper invoice in, paid invoice out.** AI reads, checks and matches. People step in only
 where a decision or money is involved.
 
-![Coverpage](https://github.com/NuBFightForMyDream/2110582_AIApps_BonusScore_OCR/blob/chatrphol-fix-detail/Coverpage.png)
+![FlowLedger cover](Coverpage.png)
 
 **Live demo:** https://flowledger-fridge-demo.fly.dev  
 **Course:** 2110582 AI Apps, bonus project (class: *AI and LS*)  

@@ -1,33 +1,43 @@
 "use client";
 
 /*
- * Step-by-step guided demo. Nothing runs on a timer: the guide works out the
- * next step from the followed invoice's current status, shows what will
- * happen, and runs it only when the user presses Next. Users can also press
- * the real button in the step card instead — the guide just follows along.
+ * Step-by-step guided demo. The guide follows one invoice and works out the
+ * current step from its status. Human steps wait for the user to press Next
+ * (or do the step themselves on the screen). Automatic steps have no button:
+ * the guide just narrates them while they run.
  */
 
 import * as act from "./actions";
 import { demoSignature } from "./canvas";
-import { draftEmail } from "./format";
+import { ROLE_OF, type Role } from "./roles";
 import { getState, update, type State } from "./store";
 import type { Actor, Order } from "./types";
 
 export interface GuideStep {
   n: number;
+  /** The screen this step happens on. */
+  role: Role;
   stage: number;
   actor: Actor | "done";
   title: string;
   text: string;
-  /** Label for the Next button; absent when the user must act themselves. */
+  /** True when the step runs by itself. */
+  auto?: boolean;
+  /** Label for the Next button on human steps. */
   next?: string;
   run?: () => unknown;
 }
 
 export const GUIDE_TOTAL = 17;
 
+/** Starts the walkthrough by scanning the sample invoice straight away. */
 export function startGuide() {
-  update((s) => void (s.guide = { orderId: null }));
+  if (!act.canTravel()) return;
+  const id = act.scanPaper();
+  update((s) => {
+    s.guide = { orderId: id };
+    s.role = "admin";
+  });
 }
 
 export function exitGuide() {
@@ -39,24 +49,37 @@ export function guideOrder(s: State): Order | undefined {
   return id ? s.orders.find((o) => o.id === id) : undefined;
 }
 
-/** Runs the current step's action, keeping the followed invoice on screen. */
+/** Goes forward: replays an undone step if there is one, otherwise does the human step. */
 export function runGuideStep() {
   const s = getState();
+  const step = guideStep(s);
+  if (step.auto || !act.canTravel()) return;
+  if (s.future.length && step.actor !== "done") return act.redo();
   const o = guideOrder(s);
-  if (o && s.busy[o.id]) return;
   if (o && s.selected !== o.id) act.select(o.id);
-  guideStep(s).run?.();
+  step.run?.();
 }
 
 export function guideStep(s: State): GuideStep {
   const o = guideOrder(s);
+  return { ...stepFor(o), role: o ? ROLE_OF[o.status] : "admin" };
+}
+
+const auto = (n: number, stage: number, actor: Actor, title: string, text: string): Omit<GuideStep, "role"> => ({
+  n,
+  stage,
+  actor,
+  title,
+  text,
+  auto: true,
+});
+
+function stepFor(o: Order | undefined): Omit<GuideStep, "role"> {
   if (!o) {
     return {
-      n: 1,
-      stage: 1,
-      actor: "sys",
+      n: 1, stage: 1, actor: "human",
       title: "Scan a paper invoice",
-      text: "A paper invoice is scanned. The raw image goes to S3 and a record is created in Postgres.",
+      text: "A clerk scans a retailer's paper order. Everything after this runs by itself until a person is needed.",
       next: "Scan sample invoice",
       run: () => {
         const id = act.scanPaper();
@@ -68,130 +91,92 @@ export function guideStep(s: State): GuideStep {
 
   switch (o.status) {
     case "stored":
-      return {
-        n: 2, stage: 3, actor: "ai",
-        title: "Read the scan",
-        text: "A local OCR model reads the fields from the image, then an LLM checks that they make sense.",
-        next: "Read invoice",
-        run: () => act.extract(id),
-      };
+      return auto(2, 3, "ai", "AI reads the invoice",
+        "The scan is saved to S3 and Postgres. A local OCR model reads the fields and an LLM checks them. No one has to press anything.");
     case "extracted":
-      return {
-        n: 3, stage: 3, actor: "human",
-        title: "Fix the flagged Tax ID",
-        text: "The LLM spotted a letter O where a zero should be. Type the fix in the card, or let the guide apply the AI suggestion.",
-        next: "Use AI suggestion and save",
-        run: () => act.approve(id, o.taxId),
-      };
+      return o.fields?.some((f) => f.flagged)
+        ? {
+            n: 3, stage: 3, actor: "human",
+            title: "A person checks the flagged field",
+            text: "The LLM spotted a letter O where a zero should be in the Tax ID. This is where a person steps in: fix it in the review form, or use the AI suggestion.",
+            next: "Use AI suggestion and save",
+            run: () => act.approve(id, o.taxId),
+          }
+        : auto(3, 3, "sys", "Fields saved", "Nothing was flagged, so the invoice is saved without a person.");
     case "saved":
-      return {
-        n: 4, stage: 4, actor: "sys",
-        title: "Check stock",
-        text: "Each order line is compared against the stock table in the database.",
-        next: "Check stock",
-        run: () => act.checkStock(id),
-      };
+      return auto(4, 4, "sys", "Warehouse system checks stock",
+        "The order lines are compared with the stock table automatically.");
     case "short":
       return {
         n: 5, stage: 4, actor: "human",
         title: "Approve a restock",
-        text: "Only 6 side-by-side fridges are in the warehouse and the order needs 9. A person decides how to restock: buy from the supplier or order a production run.",
+        text: "Only 6 side-by-side fridges are in the warehouse and the order needs 9. The system stopped here because a person has to decide: buy from the supplier or order a production run.",
         next: "Buy from supplier",
         run: () => act.restock(id, "buy"),
       };
     case "ready":
+      return auto(6, 5, "ai", "Agent checks the order",
+        "An AI agent calls tools to check the customer, their credit, the prices and the stock. It only recommends; it does not release the order on its own.");
+    case "decided":
       return {
-        n: 6, stage: 5, actor: "ai",
-        title: "Agent validates the order",
-        text: "An AI agent calls tools to check the customer, their credit, the prices and the stock, then decides.",
-        next: "Run agent",
-        run: () => act.runAgent(id),
+        n: 7, stage: 5, actor: "human",
+        title: "Confirm the agent's decision",
+        text: "The agent recommends approving the order. A person confirms before anything ships. Use the pop-up, or the task in the back office.",
+        next: "Approve order",
+        run: () => act.confirmAgent(id),
       };
     case "released":
-      return {
-        n: 7, stage: 6, actor: "sys",
-        title: "Create the invoice",
-        text: "One event creates the e-invoice and a paper copy, and notifies the delivery team.",
-        next: "Create invoice",
-        run: () => act.createInvoice(id),
-      };
+      return auto(8, 6, "sys", "Invoice created, job sent to the driver",
+        "The e-invoice and a paper copy are created and the delivery appears on the driver's phone.");
     case "invoiced":
       return {
-        n: 8, stage: 6, actor: "sys",
-        title: "Dispatch",
-        text: "The truck is loaded and the order goes out for delivery.",
-        next: "Dispatch",
+        n: 9, stage: 6, actor: "human",
+        title: "Driver starts the delivery",
+        text: "The driver loads the truck and taps Start delivery on their phone.",
+        next: "Start delivery",
         run: () => act.dispatch(id),
       };
     case "out":
       return {
-        n: 9, stage: 6, actor: "human",
+        n: 10, stage: 6, actor: "human",
         title: "Customer signs",
-        text: "The customer accepts the goods. Draw a signature in the card and confirm, or let the guide sign.",
+        text: "The customer accepts the fridges and signs on the driver's phone. Draw a signature, or let the guide sign.",
         next: "Sign for me",
         run: () => act.sign(id, demoSignature()),
       };
     case "signed":
       return o.photo
-        ? {
-            n: 11, stage: 6, actor: "ai",
-            title: "AI checks the photo",
-            text: "The AI looks for the signature, the invoice number and the item count on the delivery note.",
-            next: "Verify photo",
-            run: () => act.validateProof(id),
-          }
+        ? auto(12, 6, "ai", "AI checks the photo",
+            "The AI checks that the right model was delivered, that it is installed and that nothing is damaged.")
         : {
-            n: 10, stage: 6, actor: "sys",
-            title: "Photograph the delivery note",
-            text: "The delivery team takes a photo of the signed note as proof of delivery.",
-            next: "Use sample photo",
+            n: 11, stage: 6, actor: "human",
+            title: "Driver photographs the fridge",
+            text: "The driver takes a photo of the fridge in place as proof of delivery. Tap the shutter, or let the guide take it.",
+            next: "Take photo",
             run: () => act.attachPhoto(id),
           };
     case "proof_ok":
       return {
-        n: 12, stage: 7, actor: "human",
-        title: "Accept the payment",
-        text: "Delivery is proven. Staff record the customer's payment and pass the invoice to the AI.",
+        n: 13, stage: 7, actor: "human",
+        title: "Accounts accepts the payment",
+        text: "Delivery is proven. A person in Accounts confirms the customer has paid. Everything after this is automatic.",
         next: "Accept payment",
         run: () => act.acceptPayment(id, "Bank transfer"),
       };
     case "paid":
-      return {
-        n: 13, stage: 7, actor: "ai",
-        title: "Match with the bank",
-        text: "The AI finds the matching incoming transfer through the Bank API. Open the Bank tab on the right to watch it.",
-        next: "Match payment",
-        run: () => act.matchBank(id),
-      };
+      return auto(14, 7, "ai", "AI matches the payment",
+        "The AI finds the incoming transfer through the Bank API and checks the amount, payer and reference.");
     case "matched":
-      return {
-        n: 14, stage: 7, actor: "sys",
-        title: "Update stock and database",
-        text: "Delivered items are taken out of stock and the invoice is marked paid. This closes the loop with stage 4.",
-        next: "Update stock and database",
-        run: () => act.updateStock(id),
-      };
+      return auto(15, 7, "sys", "Stock and database updated",
+        "The delivered fridges come out of stock and the invoice is marked paid. This closes the loop with stage 4.");
     case "closed":
-      return s.composeFor === id
-        ? {
-            n: 16, stage: 8, actor: "mail",
-            title: "Send the email",
-            text: "Read the draft and edit it if you like. Send it from the Gmail window, or let the guide send it as written.",
-            next: "Send email",
-            run: () => act.sendEmail(id, draftEmail(o)),
-          }
-        : {
-            n: 15, stage: 8, actor: "mail",
-            title: "Draft the Gmail invoice",
-            text: "A receipt email is drafted with the paid invoice attached.",
-            next: "Draft email in Gmail",
-            run: () => act.compose(id),
-          };
+      return auto(16, 8, "mail", "Paid invoice emailed",
+        "The paid invoice is emailed to the customer through the Gmail API.");
     case "emailed":
       return {
         n: GUIDE_TOTAL, stage: 8, actor: "done",
         title: "Paid and closed",
-        text: "Nine side-by-side and six two-door fridges went from a paper order to a paid invoice in the customer's inbox. A person stepped in four times: the Tax ID, the restock, the signature and the payment.",
+        text: "This is the customer's inbox with the paid invoice. People only stepped in where judgement or a signature was needed: the Tax ID, the restock, the agent's decision, the delivery, the signature, the photo and the payment. Everything else ran by itself.",
         next: "Finish",
         run: exitGuide,
       };

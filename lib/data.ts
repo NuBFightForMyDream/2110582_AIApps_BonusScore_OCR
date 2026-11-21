@@ -10,6 +10,7 @@ export const CATALOG: Record<Sku, { name: string; price: number }> = {
 export interface CustomerTemplate {
   customer: string;
   email: string;
+  address: string;
   taxId: string;
   /** Simulated OCR misread (letter O instead of zero). */
   ocrTaxId?: string;
@@ -21,18 +22,21 @@ export const TEMPLATES: CustomerTemplate[] = [
   {
     customer: "Chaiyaporn Electric Ltd.",
     email: "accounts@chaiyaporn-electric.example",
+    address: "88 Rama IV Rd, Khlong Toei, Bangkok 10110",
     taxId: "0105559012345",
     items: [["FR-2D", 12], ["FR-1D", 20]],
   },
   {
     customer: "Rattana Home Store",
     email: "billing@rattana-home.example",
+    address: "214 Ngamwongwan Rd, Mueang, Nonthaburi 11000",
     taxId: "0105561098765",
     items: [["FR-SBS", 4], ["FR-MINI", 10]],
   },
   {
     customer: "Siam Appliance Co.",
     email: "finance@siamappliance.example",
+    address: "1/9 Phetkasem Rd, Bang Khae, Bangkok 10160",
     taxId: "0105548021187",
     ocrTaxId: "0105548O21187",
     items: [["FR-SBS", 9], ["FR-2D", 6]],
@@ -40,6 +44,7 @@ export const TEMPLATES: CustomerTemplate[] = [
   {
     customer: "Lumpini Residence Hotel",
     email: "ap@lumpini-residence.example",
+    address: "35 Wireless Rd, Pathum Wan, Bangkok 10330",
     taxId: "0105563044120",
     ocrTaxId: "01O5563044120",
     items: [["FR-MINI", 24], ["FR-1D", 4]],
@@ -52,6 +57,7 @@ export const STATUS: Record<Status, { label: string; stage: number }> = {
   saved: { label: "Validated", stage: 3 },
   short: { label: "Stock short", stage: 4 },
   ready: { label: "Stock OK", stage: 4 },
+  decided: { label: "Agent recommends approval", stage: 5 },
   released: { label: "Order released", stage: 5 },
   invoiced: { label: "Invoice created", stage: 6 },
   out: { label: "Out for delivery", stage: 6 },
@@ -72,6 +78,7 @@ export const NEXT: Record<Status, { actor: Actor; what: string } | null> = {
   saved: { actor: "sys", what: "Check stock" },
   short: { actor: "human", what: "Approve restock" },
   ready: { actor: "ai", what: "Run agentic validation" },
+  decided: { actor: "human", what: "Confirm the agent's decision" },
   released: { actor: "sys", what: "Create invoice" },
   invoiced: { actor: "sys", what: "Dispatch delivery" },
   out: { actor: "human", what: "Collect customer signature" },
