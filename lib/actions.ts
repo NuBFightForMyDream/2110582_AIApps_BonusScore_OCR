@@ -20,7 +20,7 @@ import { getState, initialState, update, type Snapshot, type State } from "./sto
 import type { Actor, BusyKind, Channel, Order, Status } from "./types";
 
 /** Sample delivery photo, served from public/. */
-const SAMPLE_PHOTO = "/delivery-photo.jpg";
+const SAMPLE_PHOTO = "/delivery-photo.svg";
 /** Pause between automatic steps so people can see each one happen. */
 const GAP = 700;
 

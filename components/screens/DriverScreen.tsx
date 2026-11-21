@@ -160,7 +160,7 @@ function Stop({ o, onBack }: { o: Order; onBack: () => void }) {
           {/* Live preview: the sample photo if it exists, otherwise the plain dark viewfinder. */}
           <img
             className="vf-live"
-            src="/delivery-photo.jpg"
+            src="/delivery-photo.svg"
             alt=""
             onError={(e) => (e.currentTarget.style.display = "none")}
           />
