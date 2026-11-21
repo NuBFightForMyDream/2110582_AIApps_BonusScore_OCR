@@ -3,6 +3,10 @@ Project Repo for 2110582 AI Apps by 6730084521 Chatrphol and 6733092021 Thanabod
 
 ## FlowLedger — AI order-to-cash demo
 
+**Live site: https://flowledger-fridge-demo.fly.dev**
+
+A class project for **AI and LS**, by Chatrphol (6730084521) and Thanabodee (6733092021).
+
 FlowLedger is the back office of a fridge distributor. It walks a customer's order
 from the invoice to a paid invoice in the customer's inbox. AI reads, checks and
 matches; people step in only for flagged data, restocking, signatures and payments.
@@ -20,6 +24,17 @@ npm run dev      # http://localhost:3000
 Press **Guided demo** for a step-by-step walkthrough. A bar at the bottom explains each
 step and waits for you: press its button to run the step, or click the real button in the
 step card yourself. Or add invoices from the left panel and work through them freely.
+
+### Deploy (Fly.io)
+
+The app builds to static files (`output: "export"`) served by nginx. Config is in
+`fly.toml`, `Dockerfile` and `nginx.conf`. The machine sleeps when idle and wakes on
+the next visit, so the first load after a quiet period takes a few seconds.
+
+```bash
+fly auth login
+fly deploy --remote-only --ha=false
+```
 
 ### The pipeline
 

@@ -1529,3 +1529,20 @@ thead th {
     transition: none !important;
   }
 }
+
+/* ---------- credits ---------- */
+.credits {
+  margin-top: 48px;
+  padding-top: 20px;
+  border-top: 1px solid var(--steel);
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.credits p {
+  margin: 0 0 6px;
+  max-width: 64ch;
+}
+.credits a {
+  color: var(--sys);
+  text-underline-offset: 2px;
+}

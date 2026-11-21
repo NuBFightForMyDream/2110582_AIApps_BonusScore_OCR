@@ -23,7 +23,7 @@ export default function TopBar() {
         </svg>
         <div>
           <div className="brand-name">FlowLedger</div>
-          <div className="brand-sub">Fridge order-to-cash demo</div>
+          <div className="brand-sub">AI and LS class project</div>
         </div>
       </div>
 

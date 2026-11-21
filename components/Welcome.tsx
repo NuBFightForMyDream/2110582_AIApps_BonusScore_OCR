@@ -48,6 +48,16 @@ export default function Welcome() {
         ))}
       </ol>
       <p className="hint">Stage 7 takes the delivered fridges out of the same stock table that stage 4 checks.</p>
+
+      <footer className="credits">
+        <p>
+          A class project for <b>AI and LS</b>, by Chatrphol (6730084521) and Thanabodee (6733092021).
+        </p>
+        <p>
+          Every service is simulated in your browser. No real invoices, bank accounts or emails are used.{" "}
+          <a href="https://github.com/NuBFightForMyDream/2110582_AIApps_BonusScore_OCRPlatform">Source on GitHub</a>
+        </p>
+      </footer>
     </div>
   );
 }
